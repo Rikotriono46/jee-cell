@@ -481,6 +481,53 @@ init_db()
 
 # === Init & Run ===
 if __name__ == '__main__':
-    import os
+    import socket
+
+    def get_local_ip():
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+            return ip
+        except Exception:
+            return "127.0.0.1"
+
     port = int(os.environ.get('PORT', 5000))
-    app.run(debug=False, host='0.0.0.0', port=port)
+
+    print()
+    print("=" * 45)
+    print("   🏪  Jee Cell - Agen BRILink")
+    print("=" * 45)
+    print()
+    print("  Pilih mode menjalankan server:")
+    print()
+    print("  [1] Localhost (hanya PC ini)")
+    print("      → http://127.0.0.1:{}".format(port))
+    print()
+    print("  [2] Network (satu WiFi bisa akses)")
+    local_ip = get_local_ip()
+    print("      → http://{}:{}".format(local_ip, port))
+    print()
+
+    while True:
+        choice = input("  Pilih (1/2): ").strip()
+        if choice == '1':
+            host = '127.0.0.1'
+            print(f"\n  ✅ Server berjalan di http://127.0.0.1:{port}")
+            print(f"  🔐 Admin: http://127.0.0.1:{port}/admin/login")
+            break
+        elif choice == '2':
+            host = '0.0.0.0'
+            print(f"\n  ✅ Server berjalan di http://{local_ip}:{port}")
+            print(f"  📱 Dari HP/device: http://{local_ip}:{port}")
+            print(f"  🔐 Admin: http://{local_ip}:{port}/admin/login")
+            break
+        else:
+            print("  ⚠️  Pilih 1 atau 2!")
+
+    print("  Tekan Ctrl+C untuk berhenti")
+    print("=" * 45)
+    print()
+
+    app.run(debug=False, host=host, port=port)
