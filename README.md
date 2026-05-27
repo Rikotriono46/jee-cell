@@ -24,14 +24,6 @@ Website toko serba ada dengan layanan BRILink, pulsa, voucher game, token listri
 - **Frontend:** HTML/CSS/JS, Font Awesome
 - **Server:** Gunicorn
 
-## Deploy
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Rikotriono46/jee-cell)
-
-## Login Admin
-
-- **Username:** admin
-- **Password:** jeecell2024
 
 ## Developer
 
