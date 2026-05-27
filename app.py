@@ -4,7 +4,7 @@ from database import *
 import os
 
 app = Flask(__name__)
-app.secret_key = 'jeecell-secret-key-2024-brilink'
+app.secret_key = os.environ.get('SECRET_KEY', 'jeecell-secret-key-2024-brilink')
 app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2MB upload limit
 
 # === Auth decorator ===
@@ -244,7 +244,11 @@ def api_featured():
     products = get_products(featured_only=True)
     return jsonify([dict(p) for p in products])
 
+# === Init DB on startup ===
+init_db()
+
 # === Init & Run ===
 if __name__ == '__main__':
-    init_db()
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
