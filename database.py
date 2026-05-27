@@ -82,6 +82,31 @@ def init_db():
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
 
+    # Savings customers (nasabah tabungan)
+    c.execute('''CREATE TABLE IF NOT EXISTS savings_customers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        phone TEXT,
+        address TEXT,
+        notes TEXT,
+        balance REAL DEFAULT 0,
+        is_active INTEGER DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''')
+
+    # Savings transactions (setor/tarik tabungan)
+    c.execute('''CREATE TABLE IF NOT EXISTS savings_transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        customer_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        amount REAL NOT NULL,
+        balance_before REAL DEFAULT 0,
+        balance_after REAL DEFAULT 0,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (customer_id) REFERENCES savings_customers(id) ON DELETE CASCADE
+    )''')
+
     conn.commit()
 
     # Seed default data if empty
@@ -358,5 +383,122 @@ def get_transaction_count_today():
 def get_recent_transactions(limit=20):
     conn = get_db()
     rows = conn.execute("SELECT * FROM transactions ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()
+    conn.close()
+    return rows
+
+
+# === Savings / Tabungan functions ===
+
+def get_savings_customers(active_only=True):
+    conn = get_db()
+    q = "SELECT * FROM savings_customers"
+    if active_only:
+        q += " WHERE is_active=1"
+    q += " ORDER BY name ASC"
+    rows = conn.execute(q).fetchall()
+    conn.close()
+    return rows
+
+def get_savings_customer(customer_id):
+    conn = get_db()
+    row = conn.execute("SELECT * FROM savings_customers WHERE id=?", (customer_id,)).fetchone()
+    conn.close()
+    return row
+
+def add_savings_customer(name, phone='', address='', notes=''):
+    conn = get_db()
+    conn.execute('''INSERT INTO savings_customers (name, phone, address, notes) VALUES (?,?,?,?)''',
+                 (name, phone, address, notes))
+    conn.commit()
+    cid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+    conn.close()
+    return cid
+
+def update_savings_customer(customer_id, name, phone='', address='', notes=''):
+    conn = get_db()
+    conn.execute('''UPDATE savings_customers SET name=?, phone=?, address=?, notes=? WHERE id=?''',
+                 (name, phone, address, notes, customer_id))
+    conn.commit()
+    conn.close()
+
+def delete_savings_customer(customer_id):
+    conn = get_db()
+    conn.execute("DELETE FROM savings_customers WHERE id=?", (customer_id,))
+    conn.commit()
+    conn.close()
+
+def add_savings_transaction(customer_id, trans_type, amount, notes=''):
+    """trans_type: 'deposit' (setor) or 'withdraw' (tarik)"""
+    conn = get_db()
+    conn.execute("PRAGMA foreign_keys=ON")
+    customer = conn.execute("SELECT * FROM savings_customers WHERE id=?", (customer_id,)).fetchone()
+    if not customer:
+        conn.close()
+        return None, "Nasabah tidak ditemukan"
+
+    balance_before = customer['balance']
+    if trans_type == 'deposit':
+        balance_after = balance_before + amount
+    else:
+        if amount > balance_before:
+            conn.close()
+            return None, f"Saldo tidak cukup! Saldo saat ini: Rp {balance_before:,.0f}"
+        balance_after = balance_before - amount
+
+    # Insert transaction
+    conn.execute('''INSERT INTO savings_transactions (customer_id, type, amount, balance_before, balance_after, notes)
+                    VALUES (?,?,?,?,?,?)''',
+                 (customer_id, trans_type, amount, balance_before, balance_after, notes))
+
+    # Update customer balance
+    conn.execute("UPDATE savings_customers SET balance=? WHERE id=?", (balance_after, customer_id))
+
+    conn.commit()
+    tx_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+    conn.close()
+    return tx_id, None
+
+def get_savings_transactions(customer_id, limit=100):
+    conn = get_db()
+    rows = conn.execute('''SELECT * FROM savings_transactions
+                           WHERE customer_id=? ORDER BY created_at DESC LIMIT ?''',
+                        (customer_id, limit)).fetchall()
+    conn.close()
+    return rows
+
+def get_savings_transaction(tx_id):
+    conn = get_db()
+    row = conn.execute("SELECT * FROM savings_transactions WHERE id=?", (tx_id,)).fetchone()
+    conn.close()
+    return row
+
+def get_savings_transactions_range(customer_id, date_from, date_to):
+    """Get transactions within date range for receipt printing"""
+    conn = get_db()
+    rows = conn.execute('''SELECT * FROM savings_transactions
+                           WHERE customer_id=? AND DATE(created_at) BETWEEN ? AND ?
+                           ORDER BY created_at ASC''',
+                        (customer_id, date_from, date_to)).fetchall()
+    conn.close()
+    return rows
+
+def get_savings_total():
+    conn = get_db()
+    row = conn.execute("SELECT COALESCE(SUM(balance), 0) FROM savings_customers WHERE is_active=1").fetchone()
+    conn.close()
+    return row[0]
+
+def get_savings_customer_count():
+    conn = get_db()
+    count = conn.execute("SELECT COUNT(*) FROM savings_customers WHERE is_active=1").fetchone()[0]
+    conn.close()
+    return count
+
+def search_savings_customers(query):
+    conn = get_db()
+    like = f'%{query}%'
+    rows = conn.execute('''SELECT * FROM savings_customers
+                           WHERE is_active=1 AND (name LIKE ? OR phone LIKE ?)
+                           ORDER BY name ASC''', (like, like)).fetchall()
     conn.close()
     return rows

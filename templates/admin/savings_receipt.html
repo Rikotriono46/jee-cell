@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Struk Tabungan - {{ customer.name }} - Jee Cell</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        @media print {
+            body { background: #fff; padding: 0; }
+            .no-print { display: none !important; }
+            .receipt { box-shadow: none; border: none; }
+        }
+        .no-print {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .no-print button {
+            padding: 10px 30px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        .btn-print { background: #003d79; color: #fff; }
+        .btn-back { background: #eee; color: #333; }
+        .receipt {
+            max-width: 400px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 25px 20px;
+            border: 1px dashed #ccc;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .receipt-header {
+            text-align: center;
+            border-bottom: 1px dashed #999;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+        }
+        .receipt-header .store-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        .receipt-header .store-sub {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 3px;
+        }
+        .receipt-header .receipt-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .receipt-info {
+            margin-bottom: 12px;
+            font-size: 0.78rem;
+            line-height: 1.8;
+        }
+        .receipt-info .info-row {
+            display: flex;
+            justify-content: space-between;
+        }
+        .receipt-info .info-label { color: #666; }
+        .receipt-info .info-value { font-weight: bold; text-align: right; }
+        .receipt-divider {
+            border: none;
+            border-top: 1px dashed #999;
+            margin: 10px 0;
+        }
+        .receipt-trans {
+            margin-bottom: 12px;
+        }
+        .receipt-trans .trans-item {
+            padding: 6px 0;
+            border-bottom: 1px dotted #ddd;
+            font-size: 0.78rem;
+        }
+        .receipt-trans .trans-item:last-child { border-bottom: none; }
+        .trans-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .trans-type {
+            font-weight: bold;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 0.68rem;
+        }
+        .trans-type.deposit { background: #d4edda; color: #155724; }
+        .trans-type.withdraw { background: #f8d7da; color: #721c24; }
+        .trans-amount {
+            font-weight: bold;
+        }
+        .trans-amount.dep { color: #27ae60; }
+        .trans-amount.wdr { color: #e74c3c; }
+        .trans-detail {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 2px;
+        }
+        .receipt-summary {
+            border-top: 1px dashed #999;
+            padding-top: 10px;
+            margin-top: 10px;
+            font-size: 0.82rem;
+            line-height: 2;
+        }
+        .receipt-summary .sum-row {
+            display: flex;
+            justify-content: space-between;
+        }
+        .receipt-summary .sum-label { color: #666; }
+        .receipt-summary .sum-value { font-weight: bold; }
+        .receipt-summary .sum-big {
+            font-size: 1.05rem;
+            color: #003d79;
+        }
+        .receipt-footer {
+            text-align: center;
+            border-top: 1px dashed #999;
+            padding-top: 12px;
+            margin-top: 12px;
+            font-size: 0.7rem;
+            color: #888;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print">
+        <button class="btn-print" onclick="window.print()"><i class="fas fa-print"></i> Cetak Struk</button>
+        <button class="btn-back" onclick="history.back()">← Kembali</button>
+    </div>
+
+    <div class="receipt">
+        <!-- Header -->
+        <div class="receipt-header">
+            <div class="store-name">{{ settings.get('store_name', 'Jee Cell') }}</div>
+            <div class="store-sub">{{ settings.get('address', '') }}</div>
+            <div class="store-sub">WA: {{ settings.get('whatsapp', '') }}</div>
+            <div class="receipt-title">📋 Bukti Tabungan</div>
+        </div>
+
+        <!-- Customer Info -->
+        <div class="receipt-info">
+            <div class="info-row">
+                <span class="info-label">Nama</span>
+                <span class="info-value">{{ customer.name }}</span>
+            </div>
+            {% if customer.phone %}
+            <div class="info-row">
+                <span class="info-label">No. HP</span>
+                <span class="info-value">{{ customer.phone }}</span>
+            </div>
+            {% endif %}
+            {% if customer.address %}
+            <div class="info-row">
+                <span class="info-label">Alamat</span>
+                <span class="info-value">{{ customer.address }}</span>
+            </div>
+            {% endif %}
+            <div class="info-row">
+                <span class="info-label">Periode</span>
+                <span class="info-value">{{ date_from }} s/d {{ date_to }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Dicetak</span>
+                <span class="info-value">{{ now.strftime('%d/%m/%Y %H:%M') if now else '' }}</span>
+            </div>
+        </div>
+
+        <hr class="receipt-divider">
+
+        <!-- Transactions -->
+        {% set ns = namespace(total_deposit=0, total_withdraw=0, first_balance=none, last_balance=none) %}
+        <div class="receipt-trans">
+            <div style="font-size:0.75rem;font-weight:bold;margin-bottom:6px;color:#555;">RIWAYAT TRANSAKSI:</div>
+            {% for t in transactions %}
+                {% if ns.first_balance is none %}{% set ns.first_balance = t.balance_before %}{% endif %}
+                {% set ns.last_balance = t.balance_after %}
+                {% if t.type == 'deposit' %}
+                    {% set ns.total_deposit = ns.total_deposit + t.amount %}
+                {% else %}
+                    {% set ns.total_withdraw = ns.total_withdraw + t.amount %}
+                {% endif %}
+            <div class="trans-item">
+                <div class="trans-top">
+                    <span class="trans-type {{ t.type }}">{{ 'SETOR' if t.type == 'deposit' else 'TARIK' }}</span>
+                    <span class="trans-amount {{ 'dep' if t.type == 'deposit' else 'wdr' }}">
+                        {{ '+' if t.type == 'deposit' else '-' }}Rp {{ "{:,.0f}".format(t.amount) }}
+                    </span>
+                </div>
+                <div class="trans-detail">
+                    <span>{{ t.created_at[:16] if t.created_at else '-' }}</span>
+                    <span>Saldo: Rp {{ "{:,.0f}".format(t.balance_after) }}</span>
+                </div>
+                {% if t.notes %}
+                <div style="font-size:0.68rem;color:#999;margin-top:2px;">📝 {{ t.notes }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% if not transactions %}
+            <div style="text-align:center;padding:15px;color:#999;font-size:0.78rem;">Tidak ada transaksi pada periode ini</div>
+            {% endif %}
+        </div>
+
+        {% if transactions %}
+        <hr class="receipt-divider">
+
+        <!-- Summary -->
+        <div class="receipt-summary">
+            {% if ns.first_balance is not none %}
+            <div class="sum-row">
+                <span class="sum-label">Saldo Awal</span>
+                <span class="sum-value">Rp {{ "{:,.0f}".format(ns.first_balance) }}</span>
+            </div>
+            {% endif %}
+            <div class="sum-row">
+                <span class="sum-label">Total Setor</span>
+                <span class="sum-value" style="color:#27ae60;">+ Rp {{ "{:,.0f}".format(ns.total_deposit) }}</span>
+            </div>
+            <div class="sum-row">
+                <span class="sum-label">Total Tarik</span>
+                <span class="sum-value" style="color:#e74c3c;">- Rp {{ "{:,.0f}".format(ns.total_withdraw) }}</span>
+            </div>
+            <hr class="receipt-divider" style="margin:6px 0;">
+            <div class="sum-row">
+                <span class="sum-label">Saldo Akhir</span>
+                <span class="sum-value sum-big">Rp {{ "{:,.0f}".format(ns.last_balance) }}</span>
+            </div>
+            <div class="sum-row" style="font-size:0.7rem;color:#888;margin-top:4px;">
+                <span>{{ transactions|length }} transaksi</span>
+                <span>Perubahan: {{ '+' if (ns.total_deposit - ns.total_withdraw) >= 0 else '' }}Rp {{ "{:,.0f}".format(ns.total_deposit - ns.total_withdraw) }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <div class="receipt-footer">
+            <div>Terima kasih atas kepercayaan Anda</div>
+            <div style="margin-top:3px;">Simpan struk ini sebagai bukti</div>
+            <div style="margin-top:8px;font-size:0.65rem;">{{ settings.get('store_name', 'Jee Cell') }} · Agen BRILink Terpercaya</div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-focus for print
+        window.onload = function() {
+            // Optional: auto print
+        }
+    </script>
+</body>
+</html>

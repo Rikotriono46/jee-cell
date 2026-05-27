@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_wtf.csrf import CSRFProtect
 from functools import wraps
 from database import *
+from datetime import datetime
 import os
 import urllib.parse
 
@@ -300,6 +301,142 @@ def admin_transaction_invoice(tid):
     return render_template('admin/invoice.html',
                            transaction=transaction,
                            settings=settings)
+
+# === Tabungan / Savings ===
+@app.route('/admin/savings')
+@admin_required
+def admin_savings():
+    search = request.args.get('q', '').strip()
+    if search:
+        customers = search_savings_customers(search)
+    else:
+        customers = get_savings_customers()
+    total_savings = get_savings_total()
+    return render_template('admin/savings.html',
+                           customers=customers,
+                           total_savings=total_savings,
+                           search=search)
+
+@app.route('/admin/savings/add', methods=['POST'])
+@admin_required
+def admin_savings_add():
+    name = request.form.get('name', '').strip()
+    if not name:
+        flash('Nama nasabah wajib diisi!', 'error')
+        return redirect(url_for('admin_savings'))
+    cid = add_savings_customer(
+        name=name,
+        phone=request.form.get('phone', ''),
+        address=request.form.get('address', ''),
+        notes=request.form.get('notes', ''),
+    )
+    flash(f'Nasabah "{name}" berhasil ditambahkan!', 'success')
+    return redirect(url_for('admin_savings_detail', cid=cid))
+
+@app.route('/admin/savings/<int:cid>')
+@admin_required
+def admin_savings_detail(cid):
+    customer = get_savings_customer(cid)
+    if not customer:
+        flash('Nasabah tidak ditemukan!', 'error')
+        return redirect(url_for('admin_savings'))
+    transactions = get_savings_transactions(cid)
+    return render_template('admin/savings_detail.html',
+                           customer=customer,
+                           transactions=transactions)
+
+@app.route('/admin/savings/<int:cid>/edit', methods=['POST'])
+@admin_required
+def admin_savings_edit(cid):
+    customer = get_savings_customer(cid)
+    if not customer:
+        flash('Nasabah tidak ditemukan!', 'error')
+        return redirect(url_for('admin_savings'))
+    update_savings_customer(
+        customer_id=cid,
+        name=request.form.get('name', customer['name']).strip() or customer['name'],
+        phone=request.form.get('phone', ''),
+        address=request.form.get('address', ''),
+        notes=request.form.get('notes', ''),
+    )
+    flash('Data nasabah berhasil diupdate!', 'success')
+    return redirect(url_for('admin_savings_detail', cid=cid))
+
+@app.route('/admin/savings/<int:cid>/delete', methods=['POST'])
+@admin_required
+def admin_savings_delete(cid):
+    delete_savings_customer(cid)
+    flash('Nasabah berhasil dihapus!', 'success')
+    return redirect(url_for('admin_savings'))
+
+@app.route('/admin/savings/<int:cid>/transaction', methods=['POST'])
+@admin_required
+def admin_savings_transaction(cid):
+    customer = get_savings_customer(cid)
+    if not customer:
+        flash('Nasabah tidak ditemukan!', 'error')
+        return redirect(url_for('admin_savings'))
+    trans_type = request.form.get('type', 'deposit')
+    amount = float(request.form.get('amount', 0))
+    if amount <= 0:
+        flash('Jumlah harus lebih dari 0!', 'error')
+        return redirect(url_for('admin_savings_detail', cid=cid))
+    tx_id, error = add_savings_transaction(
+        customer_id=cid,
+        trans_type=trans_type,
+        amount=amount,
+        notes=request.form.get('notes', ''),
+    )
+    if error:
+        flash(error, 'error')
+    else:
+        label = 'Setor tunai' if trans_type == 'deposit' else 'Penarikan'
+        flash(f'{label} Rp {amount:,.0f} berhasil!', 'success')
+    return redirect(url_for('admin_savings_detail', cid=cid))
+
+@app.route('/admin/savings/<int:cid>/receipt')
+@admin_required
+def admin_savings_receipt(cid):
+    customer = get_savings_customer(cid)
+    if not customer:
+        flash('Nasabah tidak ditemukan!', 'error')
+        return redirect(url_for('admin_savings'))
+    date_from = request.args.get('from', '')
+    date_to = request.args.get('to', '')
+    if not date_from:
+        date_from = datetime.now().strftime('%Y-%m-%d')
+    if not date_to:
+        date_to = datetime.now().strftime('%Y-%m-%d')
+    transactions = get_savings_transactions_range(cid, date_from, date_to)
+    settings = get_all_settings()
+    return render_template('admin/savings_receipt.html',
+                           customer=customer,
+                           transactions=transactions,
+                           date_from=date_from,
+                           date_to=date_to,
+                           settings=settings,
+                           now=datetime.now())
+
+@app.route('/admin/savings/<int:cid>/receipt/<int:tx_id>')
+@admin_required
+def admin_savings_receipt_single(cid, tx_id):
+    customer = get_savings_customer(cid)
+    if not customer:
+        flash('Nasabah tidak ditemukan!', 'error')
+        return redirect(url_for('admin_savings'))
+    tx = get_savings_transaction(tx_id)
+    if not tx:
+        flash('Transaksi tidak ditemukan!', 'error')
+        return redirect(url_for('admin_savings_detail', cid=cid))
+    settings = get_all_settings()
+    return render_template('admin/savings_receipt.html',
+                           customer=customer,
+                           transactions=[tx],
+                           date_from=tx['created_at'][:10] if tx['created_at'] else '',
+                           date_to=tx['created_at'][:10] if tx['created_at'] else '',
+                           settings=settings,
+                           single_receipt=True,
+                           now=datetime.now())
 
 # === API for AJAX ===
 @app.route('/api/search')
