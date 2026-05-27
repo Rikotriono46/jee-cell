@@ -244,6 +244,23 @@ def get_product(product_id):
     row = conn.execute("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id=c.id WHERE p.id=?", (product_id,)).fetchone()
     conn.close()
     return row
+def search_products(query):
+    conn = get_db()
+    q = """SELECT p.*, c.name as category_name, c.icon as category_icon
+           FROM products p LEFT JOIN categories c ON p.category_id=c.id
+           WHERE p.is_active=1 AND (p.name LIKE ? OR p.description LIKE ?)
+           ORDER BY p.name"""
+    like = f'%{query}%'
+    rows = conn.execute(q, (like, like)).fetchall()
+    conn.close()
+    return rows
+
+def get_transaction(transaction_id):
+    conn = get_db()
+    row = conn.execute("SELECT * FROM transactions WHERE id=?", (transaction_id,)).fetchone()
+    conn.close()
+    return row
+
 
 def add_product(name, category_id, price, price_label, description, image_url, stock, is_active, is_featured):
     conn = get_db()
@@ -296,3 +313,50 @@ def get_category_count():
     count = conn.execute("SELECT COUNT(*) FROM categories WHERE is_active=1").fetchone()[0]
     conn.close()
     return count
+
+# === Transaction functions ===
+
+def add_transaction(type, description, amount, customer_name='', customer_phone='', notes='', status='completed'):
+    conn = get_db()
+    conn.execute('''INSERT INTO transactions (type, description, amount, customer_name, customer_phone, notes, status)
+                    VALUES (?,?,?,?,?,?,?)''',
+                 (type, description, amount, customer_name, customer_phone, notes, status))
+    conn.commit()
+    conn.close()
+
+def get_transactions_today():
+    conn = get_db()
+    today = datetime.now().strftime('%Y-%m-%d')
+    rows = conn.execute("SELECT * FROM transactions WHERE DATE(created_at)=? ORDER BY created_at DESC", (today,)).fetchall()
+    conn.close()
+    return rows
+
+def get_sales_summary(days=7):
+    conn = get_db()
+    rows = conn.execute('''SELECT DATE(created_at) as date, SUM(amount) as total, COUNT(*) as count
+                           FROM transactions
+                           WHERE created_at >= DATE('now', ?)
+                           GROUP BY DATE(created_at)
+                           ORDER BY DATE(created_at) ASC''', (f'-{days} days',)).fetchall()
+    conn.close()
+    return rows
+
+def get_total_sales_today():
+    conn = get_db()
+    today = datetime.now().strftime('%Y-%m-%d')
+    row = conn.execute("SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE DATE(created_at)=?", (today,)).fetchone()
+    conn.close()
+    return row[0]
+
+def get_transaction_count_today():
+    conn = get_db()
+    today = datetime.now().strftime('%Y-%m-%d')
+    count = conn.execute("SELECT COUNT(*) FROM transactions WHERE DATE(created_at)=?", (today,)).fetchone()[0]
+    conn.close()
+    return count
+
+def get_recent_transactions(limit=20):
+    conn = get_db()
+    rows = conn.execute("SELECT * FROM transactions ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()
+    conn.close()
+    return rows

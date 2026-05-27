@@ -23,6 +23,7 @@
         <ul class="sidebar-menu">
             <li><a href="{{ url_for('admin_dashboard') }}" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
             <li><a href="{{ url_for('admin_products') }}"><i class="fas fa-box"></i> Produk</a></li>
+            <li><a href="{{ url_for('admin_transactions') }}"><i class="fas fa-exchange-alt"></i> Transaksi</a></li>
             <li><a href="{{ url_for('admin_settings') }}"><i class="fas fa-cog"></i> Pengaturan</a></li>
             <div class="sidebar-section-title">Lainnya</div>
             <li><a href="/" target="_blank"><i class="fas fa-external-link-alt"></i> Lihat Website</a></li>
@@ -92,6 +93,24 @@
             </div>
         </div>
 
+        <!-- Sales Stats -->
+        <div class="stats-grid">
+            <div class="stat-card success">
+                <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+                <div class="stat-info">
+                    <div class="stat-number">Rp {{ "{:,.0f}".format(sales_today) }}</div>
+                    <div class="stat-label">Penjualan Hari Ini</div>
+                </div>
+            </div>
+            <div class="stat-card accent">
+                <div class="stat-icon"><i class="fas fa-receipt"></i></div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ transaction_count_today }}</div>
+                    <div class="stat-label">Transaksi Hari Ini</div>
+                </div>
+            </div>
+        </div>
+
         <!-- Quick Actions -->
         <div class="card">
             <div class="card-header">
@@ -100,7 +119,66 @@
             <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                 <a href="{{ url_for('admin_product_add') }}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Tambah Produk</a>
                 <a href="{{ url_for('admin_products') }}" class="btn btn-accent btn-sm"><i class="fas fa-list"></i> Kelola Produk</a>
+                <a href="{{ url_for('admin_transactions') }}" class="btn btn-sm" style="background:#27ae60;color:#fff;"><i class="fas fa-exchange-alt"></i> Transaksi</a>
                 <a href="{{ url_for('admin_settings') }}" class="btn btn-sm" style="background:#555;color:#fff;"><i class="fas fa-cog"></i> Pengaturan</a>
+            </div>
+        </div>
+
+        <!-- Weekly Sales Chart -->
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-chart-bar"></i> Penjualan 7 Hari Terakhir</h2>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:8px;height:180px;padding:10px 0;">
+                {% set ns = namespace(max_val=1) %}
+                {% for row in sales_weekly %}
+                    {% if row.total > ns.max_val %}{% set ns.max_val = row.total %}{% endif %}
+                {% endfor %}
+                {% for row in sales_weekly %}
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                    <small style="font-size:0.7rem;color:#555;font-weight:600;">Rp {{ "{:,.0f}".format(row.total) }}</small>
+                    <div style="width:100%;background:linear-gradient(180deg,#003d79,#1a6bb5);border-radius:6px 6px 0 0;height:{{ (row.total / ns.max_val * 140)|int }}px;min-height:4px;transition:height 0.3s;"></div>
+                    <small style="font-size:0.72rem;color:#888;">{{ row.date[5:] }}</small>
+                </div>
+                {% endfor %}
+                {% if not sales_weekly %}
+                <div style="text-align:center;width:100%;color:#aaa;padding:40px 0;">Belum ada data penjualan</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-history"></i> Transaksi Terbaru</h2>
+                <a href="{{ url_for('admin_transactions') }}" class="btn btn-sm" style="background:#eee;color:#555;">Lihat Semua</a>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tipe</th>
+                            <th>Deskripsi</th>
+                            <th>Jumlah</th>
+                            <th>Pelanggan</th>
+                            <th>Waktu</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in recent_transactions %}
+                        <tr>
+                            <td><span class="badge badge-info">{{ t.type }}</span></td>
+                            <td>{{ t.description or '-' }}</td>
+                            <td><strong>Rp {{ "{:,.0f}".format(t.amount) }}</strong></td>
+                            <td>{{ t.customer_name or '-' }}</td>
+                            <td><small style="color:#888;">{{ t.created_at }}</small></td>
+                        </tr>
+                        {% endfor %}
+                        {% if not recent_transactions %}
+                        <tr><td colspan="5" style="text-align:center;color:#888;padding:20px;">Belum ada transaksi hari ini</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -137,6 +215,7 @@
                             </td>
                             <td>
                                 <form method="POST" action="{{ url_for('admin_category_delete', cid=cat.id) }}" style="display:inline;" onsubmit="return confirm('Yakin hapus kategori ini?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn-action delete"><i class="fas fa-trash"></i> Hapus</button>
                                 </form>
                             </td>
@@ -153,6 +232,7 @@
             <div style="margin-top:20px; padding-top:20px; border-top:1px solid #eee;">
                 <h3 style="font-size:1rem;font-weight:600;margin-bottom:15px;color:#333;"><i class="fas fa-plus-circle"></i> Tambah Kategori Baru</h3>
                 <form method="POST" action="{{ url_for('admin_category_add') }}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="form-group" style="margin-bottom:0;flex:1;min-width:150px;">
                         <label>Nama Kategori</label>
                         <input type="text" name="name" class="form-control" placeholder="Nama kategori" required>
@@ -211,6 +291,7 @@
                             </td>
                             <td>
                                 <form method="POST" action="{{ url_for('admin_announcement_delete', aid=ann.id) }}" style="display:inline;" onsubmit="return confirm('Yakin hapus pengumuman ini?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn-action delete"><i class="fas fa-trash"></i> Hapus</button>
                                 </form>
                             </td>
@@ -227,6 +308,7 @@
             <div style="margin-top:20px; padding-top:20px; border-top:1px solid #eee;">
                 <h3 style="font-size:1rem;font-weight:600;margin-bottom:15px;color:#333;"><i class="fas fa-plus-circle"></i> Tambah Pengumuman Baru</h3>
                 <form method="POST" action="{{ url_for('admin_announcement_add') }}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="form-group" style="margin-bottom:0;flex:1;min-width:150px;">
                         <label>Judul</label>
                         <input type="text" name="title" class="form-control" placeholder="Judul pengumuman" required>

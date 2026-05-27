@@ -24,20 +24,32 @@
             <ul class="navbar-menu" id="navMenu">
                 <li><a href="#beranda">Beranda</a></li>
                 <li><a href="#layanan">Layanan</a></li>
-                <li><a href="#produk">Produk</a></li>
                 <li><a href="#brilink">BRILink</a></li>
-                <li><a href="#jam-buka">Jam Buka</a></li>
                 <li><a href="#lokasi">Lokasi</a></li>
+                <li><a href="/admin/login" class="nav-admin-btn"><i class="fas fa-lock"></i> Admin</a></li>
             </ul>
         </div>
     </nav>
 
     <!-- ========== HERO ========== -->
     <section class="hero" id="beranda">
+        <div class="hero-orbs">
+            <div class="hero-orb"></div>
+            <div class="hero-orb"></div>
+            <div class="hero-orb"></div>
+        </div>
         <div class="hero-content">
-            <span class="hero-badge">
-                <i class="fas fa-shield-halved"></i> Agen BRILink Resmi
-            </span>
+            <div class="hero-badges">
+                <span class="hero-badge">
+                    <i class="fas fa-shield-halved"></i> Agen BRILink Resmi
+                </span>
+                <span class="hero-badge hero-badge-status" id="open-status"
+                      data-open="{{ settings.open_hour or '8' }}"
+                      data-close="{{ settings.close_hour or '22' }}">
+                    <span class="status-dot-hero"></span>
+                    <span class="status-text-hero">Memeriksa...</span>
+                </span>
+            </div>
             <h1>{{ settings.store_name }}</h1>
             <p class="hero-subtitle">{{ settings.tagline }}</p>
             <p class="hero-address">
@@ -45,7 +57,7 @@
             </p>
             <div class="hero-buttons">
                 <a href="#layanan" class="btn btn-primary">
-                    <i class="fas fa-th-large"></i> Lihat Layanan
+                    <i class="fas fa-th-large"></i> Layanan dan Produk
                 </a>
                 <a href="https://wa.me/{{ settings.whatsapp }}" class="btn btn-whatsapp" target="_blank">
                     <i class="fab fa-whatsapp"></i> Hubungi Kami
@@ -75,19 +87,27 @@
 
     <!-- ========== ANNOUNCEMENTS MARQUEE ========== -->
     {% if announcements %}
-    <section class="announcements">
+    <section class="announcements-strip">
         <div class="announcements-inner">
                 {% for ann in announcements %}
-                <span class="announcement-item">
+                <span class="announcement-pill">
+                    <span class="ann-pulse"></span>
                     <i class="fas {{ ann.icon if ann.icon else 'fa-bullhorn' }}"></i>
-                    <strong>{{ ann.title }}</strong> — {{ ann.content }}
+                    <span class="ann-body">
+                        <strong class="ann-title">{{ ann.title }}</strong>
+                        <span class="ann-desc">{{ ann.content }}</span>
+                    </span>
                 </span>
                 {% endfor %}
                 {# duplicate for seamless loop #}
                 {% for ann in announcements %}
-                <span class="announcement-item">
+                <span class="announcement-pill">
+                    <span class="ann-pulse"></span>
                     <i class="fas {{ ann.icon if ann.icon else 'fa-bullhorn' }}"></i>
-                    <strong>{{ ann.title }}</strong> — {{ ann.content }}
+                    <span class="ann-body">
+                        <strong class="ann-title">{{ ann.title }}</strong>
+                        <span class="ann-desc">{{ ann.content }}</span>
+                    </span>
                 </span>
                 {% endfor %}
         </div>
@@ -120,86 +140,20 @@
         </div>
     </section>
 
-    <!-- ========== FEATURED PRODUCTS ========== -->
-    {% if featured %}
-    <section class="featured-products" id="produk">
+    <!-- ========== PRODUCTS CTA ========== -->
+    <section class="products-cta">
         <div class="container">
-            <div class="section-header">
-                <h2 class="section-title"><i class="fas fa-star"></i> Produk Unggulan</h2>
-                <p class="section-subtitle">Pilihan produk terbaik dan terlaris kami</p>
-            </div>
-            <div class="products-grid">
-                {% for product in featured %}
-                <a href="/produk/{{ product.id }}" class="product-card">
-                    {% if product.image_url %}
-                    <div class="product-image">
-                        <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
-                    </div>
-                    {% else %}
-                    <div class="product-image">
-                        <i class="fas fa-box-open"></i>
-                    </div>
-                    {% endif %}
-                    <div class="product-body">
-                        <span class="product-category">
-                            <i class="fas {{ product.category_icon if product.category_icon else 'fa-tag' }}"></i>
-                            {{ product.category_name }}
-                        </span>
-                        <h3 class="product-name">{{ product.name }}</h3>
-                        <p class="product-price">{{ product.price_label }}</p>
-                        {% if product.description %}
-                        <p class="product-desc">{{ product.description[:100] }}{% if product.description|length > 100 %}...{% endif %}</p>
-                        {% endif %}
-                    </div>
+            <div class="products-cta-inner">
+                <div class="products-cta-content">
+                    <h2><i class="fas fa-shopping-bag"></i> Lihat Semua Produk Kami</h2>
+                    <p>Temukan berbagai produk dan layanan terbaik dengan harga terjangkau</p>
+                </div>
+                <a href="/produk" class="btn btn-primary btn-lg">
+                    <i class="fas fa-arrow-right"></i> Jelajahi Produk
                 </a>
-                {% endfor %}
             </div>
         </div>
     </section>
-    {% endif %}
-
-    <!-- ========== PRODUCTS BY CATEGORY ========== -->
-    {% if products_by_cat %}
-    <section class="products-by-category">
-        <div class="container">
-            {% for cat_name, cat_data in products_by_cat.items() %}
-            <div class="category-section">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        <i class="fas {{ cat_data.icon if cat_data.icon else 'fa-tag' }}"></i>
-                        {{ cat_name }}
-                    </h2>
-                    {% if cat_data.description %}
-                    <p class="section-subtitle">{{ cat_data.description }}</p>
-                    {% endif %}
-                </div>
-                <div class="products-grid">
-                    {% for product in cat_data.products %}
-                    <a href="/produk/{{ product.id }}" class="product-card">
-                        {% if product.image_url %}
-                        <div class="product-image">
-                            <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
-                        </div>
-                        {% else %}
-                        <div class="product-image">
-                            <i class="fas fa-box-open"></i>
-                        </div>
-                        {% endif %}
-                        <div class="product-body">
-                            <h3 class="product-name">{{ product.name }}</h3>
-                            <p class="product-price">{{ product.price_label }}</p>
-                            {% if product.description %}
-                            <p class="product-desc">{{ product.description[:80] }}{% if product.description|length > 80 %}...{% endif %}</p>
-                            {% endif %}
-                        </div>
-                    </a>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
 
     <!-- ========== BRILink EXPLANATION ========== -->
     <section class="brilink" id="brilink">
@@ -247,24 +201,33 @@
         </div>
     </section>
 
-    <!-- ========== OPERATING HOURS ========== -->
-    <section class="hours-section" id="jam-buka">
+    <!-- ========== WHY CHOOSE US ========== -->
+    <section class="why-choose" id="kenapa-kami">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title"><i class="fas fa-clock"></i> Jam Buka</h2>
+                <h2 class="section-title">Kenapa Pilih Kami?</h2>
+                <p class="section-subtitle">Keunggulan yang membuat kami berbeda</p>
             </div>
-            <div class="hours-card">
-                <div class="hours-clock">
-                    <i class="fas fa-clock"></i>
+            <div class="why-grid">
+                <div class="why-card">
+                    <div class="why-icon"><i class="fas fa-shield-halved"></i></div>
+                    <h3>Agen BRILink Resmi</h3>
+                    <p>Terdaftar dan diawasi langsung oleh Bank BRI untuk keamanan transaksi Anda</p>
                 </div>
-                <div>
-                    <p class="hours-time">{{ settings.open_hours }}</p>
-                    <div class="hours-status" id="open-status"
-                         data-open="{{ settings.open_hour or '8' }}"
-                         data-close="{{ settings.close_hour or '22' }}">
-                        <span class="status-dot"></span>
-                        <span class="status-text">Memeriksa...</span>
-                    </div>
+                <div class="why-card">
+                    <div class="why-icon"><i class="fas fa-tag"></i></div>
+                    <h3>Harga Terjangkau</h3>
+                    <p>Produk dan layanan berkualitas dengan harga bersahabat untuk semua kalangan</p>
+                </div>
+                <div class="why-card">
+                    <div class="why-icon"><i class="fas fa-clock"></i></div>
+                    <h3>Buka Setiap Hari</h3>
+                    <p>Melayani Anda setiap hari dari pagi hingga malam tanpa libur</p>
+                </div>
+                <div class="why-card">
+                    <div class="why-icon"><i class="fas fa-heart"></i></div>
+                    <h3>Pelayanan Ramah</h3>
+                    <p>Staf kami selalu siap melayani dengan senyum dan keramahan</p>
                 </div>
             </div>
         </div>
@@ -297,6 +260,57 @@
                 </a>
             </div>
             {% endif %}
+        </div>
+    </section>
+
+    <!-- ========== TESTIMONIALS ========== -->
+    <section class="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Testimoni Pelanggan</h2>
+                <p class="section-subtitle">Apa kata mereka tentang layanan kami</p>
+            </div>
+            <div class="testi-grid">
+                <div class="testi-card">
+                    <div class="testi-quote"><i class="fas fa-quote-left"></i></div>
+                    <p class="testi-text">Transfer dan tarik tunai di sini sangat cepat dan aman. Petugasnya ramah banget, nggak perlu antre lama kayak di bank. Sangat recommended!</p>
+                    <div class="testi-author">
+                        <div class="testi-info">
+                            <strong>Siti Rahmawati</strong>
+                            <span>Pelanggan BRILink</span>
+                        </div>
+                        <div class="testi-stars">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="testi-card">
+                    <div class="testi-quote"><i class="fas fa-quote-left"></i></div>
+                    <p class="testi-text">Sering beli voucher pulsa dan paket data di sini, harganya murah dan langsung aktif. Kadang juga sekalian jajan cemilan buat anak-anak. Tempatnya nyaman!</p>
+                    <div class="testi-author">
+                        <div class="testi-info">
+                            <strong>Budi Hartono</strong>
+                            <span>Pelanggan Setia</span>
+                        </div>
+                        <div class="testi-stars">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="testi-card">
+                    <div class="testi-quote"><i class="fas fa-quote-left"></i></div>
+                    <p class="testi-text">Bayar listrik dan BPJS bulanan selalu di Jee Cell, praktis banget. Sekalian bisa beli snack dan minuman. Pelayanannya cepat dan informatif!</p>
+                    <div class="testi-author">
+                        <div class="testi-info">
+                            <strong>Dewi Lestari</strong>
+                            <span>Warga Sekitar</span>
+                        </div>
+                        <div class="testi-stars">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 

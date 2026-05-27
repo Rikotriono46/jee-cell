@@ -72,11 +72,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (isOpen) {
-      statusEl.className = 'hours-status open';
-      statusEl.innerHTML = '<span class="status-dot"></span> Sedang Buka';
+      statusEl.className = 'hero-badge hero-badge-status open';
+      statusEl.innerHTML = '<span class="status-dot-hero"></span> Sedang Buka';
     } else {
-      statusEl.className = 'hours-status closed';
-      statusEl.innerHTML = '<span class="status-dot"></span> Sedang Tutup';
+      statusEl.className = 'hero-badge hero-badge-status closed';
+      statusEl.innerHTML = '<span class="status-dot-hero"></span> Sedang Tutup';
     }
   }
   updateOpenStatus();

@@ -23,6 +23,7 @@
         <ul class="sidebar-menu">
             <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
             <li><a href="{{ url_for('admin_products') }}" class="active"><i class="fas fa-box"></i> Produk</a></li>
+            <li><a href="{{ url_for('admin_transactions') }}"><i class="fas fa-exchange-alt"></i> Transaksi</a></li>
             <li><a href="{{ url_for('admin_settings') }}"><i class="fas fa-cog"></i> Pengaturan</a></li>
             <div class="sidebar-section-title">Lainnya</div>
             <li><a href="/" target="_blank"><i class="fas fa-external-link-alt"></i> Lihat Website</a></li>
@@ -124,6 +125,7 @@
                             <td style="white-space:nowrap;">
                                 <a href="{{ url_for('admin_product_edit', pid=p.id) }}" class="btn-action edit"><i class="fas fa-edit"></i> Edit</a>
                                 <form method="POST" action="{{ url_for('admin_product_delete', pid=p.id) }}" style="display:inline;" onsubmit="return confirm('Yakin hapus produk \'{{ p.name }}\'?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn-action delete"><i class="fas fa-trash"></i> Hapus</button>
                                 </form>
                             </td>

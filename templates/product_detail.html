@@ -74,8 +74,7 @@
             <nav>
                 <a href="/">Beranda</a>
                 <a href="/produk">Produk</a>
-                <a href="/tentang">Tentang</a>
-                <a href="/kontak">Kontak</a>
+                <a href="/admin/login"><i class="fas fa-lock"></i> Admin</a>
             </nav>
         </div>
     </header>
@@ -122,7 +121,7 @@
                 {% endif %}
                 <br>
                 {% if settings.whatsapp %}
-                <a href="https://wa.me/{{ settings.whatsapp }}?text=Halo%2C%20saya%20mau%20pesan%20{{ product.name | urlencode }}" class="btn-wa" target="_blank" rel="noopener">
+                <a href="https://wa.me/{{ settings.whatsapp }}?text={{ ('Halo, saya mau pesan ' + product.name + ' seharga ' + (product.price_label or '') + '. Masih tersedia?')|urlencode }}" class="btn-wa" target="_blank" rel="noopener">
                     <i class="fab fa-whatsapp"></i> Pesan via WhatsApp
                 </a>
                 {% endif %}

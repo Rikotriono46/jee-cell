@@ -1,11 +1,26 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask_wtf.csrf import CSRFProtect
 from functools import wraps
 from database import *
 import os
+import urllib.parse
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'jeecell-secret-key-2024-brilink')
+app.secret_key = os.environ.get('SECRET_KEY') or os.urandom(32).hex()
 app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2MB upload limit
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
+
+# CSRF Protection
+csrf = CSRFProtect(app)
+
+# WhatsApp order link filter
+def wa_order_link(product_name, price_label, wa_number):
+    text = f'Halo, saya mau pesan {product_name} seharga {price_label}. Masih tersedia?'
+    return f'https://wa.me/{wa_number}?text={urllib.parse.quote(text)}'
+
+app.jinja_env.filters['wa_order'] = wa_order_link
 
 # === Auth decorator ===
 def admin_required(f):
@@ -48,7 +63,11 @@ def products_page():
     settings = get_all_settings()
     categories = get_categories()
     cat_id = request.args.get('category', type=int)
-    if cat_id:
+    search_query = request.args.get('q', '').strip()
+    if search_query:
+        products = search_products(search_query)
+        active_cat = None
+    elif cat_id:
         products = get_products(category_id=cat_id)
         active_cat = cat_id
     else:
@@ -58,7 +77,8 @@ def products_page():
                            settings=settings,
                            categories=categories,
                            products=products,
-                           active_cat=active_cat)
+                           active_cat=active_cat,
+                           search_query=search_query)
 
 @app.route('/produk/<int:product_id>')
 def product_detail(product_id):
@@ -105,12 +125,20 @@ def admin_dashboard():
     ccount = get_category_count()
     announcements = get_announcements(active_only=False)
     categories = get_categories(active_only=False)
+    sales_today = get_total_sales_today()
+    transaction_count_today = get_transaction_count_today()
+    recent_transactions = get_recent_transactions(limit=5)
+    sales_weekly = get_sales_summary(days=7)
     return render_template('admin/dashboard.html',
                            settings=settings,
                            product_count=pcount,
                            category_count=ccount,
                            announcements=announcements,
-                           categories=categories)
+                           categories=categories,
+                           sales_today=sales_today,
+                           transaction_count_today=transaction_count_today,
+                           recent_transactions=recent_transactions,
+                           sales_weekly=sales_weekly)
 
 # === Products CRUD ===
 @app.route('/admin/products')
@@ -234,11 +262,78 @@ def admin_category_delete(cid):
     return redirect(url_for('admin_dashboard'))
 
 # === API for AJAX ===
+
+# === Transactions ===
+@app.route('/admin/transactions')
+@admin_required
+def admin_transactions():
+    transactions = get_recent_transactions(limit=100)
+    sales_today = get_total_sales_today()
+    transaction_count_today = get_transaction_count_today()
+    return render_template('admin/transactions.html',
+                           transactions=transactions,
+                           sales_today=sales_today,
+                           transaction_count_today=transaction_count_today)
+
+@app.route('/admin/transactions/add', methods=['POST'])
+@admin_required
+def admin_transaction_add():
+    add_transaction(
+        type=request.form['type'],
+        description=request.form.get('description', ''),
+        amount=float(request.form.get('amount', 0)),
+        customer_name=request.form.get('customer_name', ''),
+        customer_phone=request.form.get('customer_phone', ''),
+        notes=request.form.get('notes', ''),
+        status=request.form.get('status', 'completed'),
+    )
+    flash('Transaksi berhasil ditambahkan!', 'success')
+    return redirect(url_for('admin_transactions'))
+@app.route('/admin/transactions/<int:tid>/invoice')
+@admin_required
+def admin_transaction_invoice(tid):
+    transaction = get_transaction(tid)
+    if not transaction:
+        flash('Transaksi tidak ditemukan!', 'error')
+        return redirect(url_for('admin_transactions'))
+    settings = get_all_settings()
+    return render_template('admin/invoice.html',
+                           transaction=transaction,
+                           settings=settings)
+
+# === API for AJAX ===
+@app.route('/api/search')
+@csrf.exempt
+def api_search():
+    q = request.args.get('q', '').strip()
+    if not q:
+        return jsonify([])
+    results = search_products(q)
+    return jsonify([dict(p) for p in results])
+
+
+@csrf.exempt
+@app.route('/api/sales/today')
+def api_sales_today():
+    return jsonify({
+        'total': get_total_sales_today(),
+        'count': get_transaction_count_today(),
+        'transactions': [dict(t) for t in get_transactions_today()]
+    })
+
+@csrf.exempt
+@app.route('/api/sales/weekly')
+def api_sales_weekly():
+    summary = get_sales_summary(days=7)
+    return jsonify([dict(row) for row in summary])
+
+@csrf.exempt
 @app.route('/api/products')
 def api_products():
     products = get_products()
     return jsonify([dict(p) for p in products])
 
+@csrf.exempt
 @app.route('/api/products/featured')
 def api_featured():
     products = get_products(featured_only=True)
