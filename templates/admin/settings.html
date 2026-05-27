@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengaturan - Jee Cell Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body>
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo"><i class="fas fa-store"></i> Jee <span>Cell</span></div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="{{ url_for('admin_products') }}"><i class="fas fa-box"></i> Produk</a></li>
+            <li><a href="{{ url_for('admin_settings') }}" class="active"><i class="fas fa-cog"></i> Pengaturan</a></li>
+            <div class="sidebar-section-title">Lainnya</div>
+            <li><a href="/" target="_blank"><i class="fas fa-external-link-alt"></i> Lihat Website</a></li>
+            <li><a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </aside>
+
+    <!-- Top Bar -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+            Pengaturan
+        </div>
+        <div class="topbar-right">
+            <span class="admin-name"><i class="fas fa-user-circle"></i> {{ session.admin_user }}</span>
+            <a href="{{ url_for('admin_logout') }}" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+                <span>{{ message }}</span>
+                <button class="flash-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <h1 class="page-title"><i class="fas fa-cog"></i> Pengaturan Website</h1>
+
+        <form method="POST" action="{{ url_for('admin_settings') }}">
+
+            <!-- Informasi Toko -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-store"></i> Informasi Toko</h2>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 25px;">
+                    <div class="form-group">
+                        <label for="setting_store_name"><i class="fas fa-signature"></i> Nama Toko</label>
+                        <input type="text" id="setting_store_name" name="setting_store_name" class="form-control"
+                               value="{{ settings.get('store_name', '') }}" placeholder="Jee Cell">
+                    </div>
+                    <div class="form-group">
+                        <label for="setting_tagline"><i class="fas fa-quote-left"></i> Tagline</label>
+                        <input type="text" id="setting_tagline" name="setting_tagline" class="form-control"
+                               value="{{ settings.get('tagline', '') }}" placeholder="Tagline toko...">
+                    </div>
+                    <div class="form-group">
+                        <label for="setting_whatsapp"><i class="fab fa-whatsapp"></i> Nomor WhatsApp</label>
+                        <input type="text" id="setting_whatsapp" name="setting_whatsapp" class="form-control"
+                               value="{{ settings.get('whatsapp', '') }}" placeholder="628xxxxxxxxxx">
+                        <small style="color:#888;font-size:0.8rem;">Format: 628xxx (tanpa + atau spasi)</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="setting_address"><i class="fas fa-map-marker-alt"></i> Alamat</label>
+                        <input type="text" id="setting_address" name="setting_address" class="form-control"
+                               value="{{ settings.get('address', '') }}" placeholder="Alamat toko...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jam Operasional -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-clock"></i> Jam Operasional</h2>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 25px;">
+                    <div class="form-group">
+                        <label for="setting_open_hours"><i class="fas fa-hourglass-half"></i> Jam Buka (Teks)</label>
+                        <input type="text" id="setting_open_hours" name="setting_open_hours" class="form-control"
+                               value="{{ settings.get('open_hours', '') }}" placeholder="07.00 - 22.00 WIB">
+                        <small style="color:#888;font-size:0.8rem;">Teks yang ditampilkan di website</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="setting_open_hour"><i class="fas fa-sun"></i> Jam Buka (Angka)</label>
+                        <input type="number" id="setting_open_hour" name="setting_open_hour" class="form-control"
+                               value="{{ settings.get('open_hour', '7') }}" min="0" max="23" placeholder="7">
+                    </div>
+                    <div class="form-group">
+                        <label for="setting_close_hour"><i class="fas fa-moon"></i> Jam Tutup (Angka)</label>
+                        <input type="number" id="setting_close_hour" name="setting_close_hour" class="form-control"
+                               value="{{ settings.get('close_hour', '22') }}" min="0" max="23" placeholder="22">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Google Maps -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-map"></i> Google Maps</h2>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 25px;">
+                    <div class="form-group">
+                        <label for="setting_gmaps_embed"><i class="fas fa-code"></i> Embed URL (iframe src)</label>
+                        <input type="text" id="setting_gmaps_embed" name="setting_gmaps_embed" class="form-control"
+                               value="{{ settings.get('gmaps_embed', '') }}" placeholder="https://www.google.com/maps/embed?...">
+                        <small style="color:#888;font-size:0.8rem;">URL untuk iframe embed di halaman utama</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="setting_gmaps_link"><i class="fas fa-external-link-alt"></i> Maps Link</label>
+                        <input type="text" id="setting_gmaps_link" name="setting_gmaps_link" class="form-control"
+                               value="{{ settings.get('gmaps_link', '') }}" placeholder="https://maps.google.com/...">
+                        <small style="color:#888;font-size:0.8rem;">Link yang dibuka saat user klik "Buka Maps"</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tentang & Lainnya -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-info-circle"></i> Tentang & Lainnya</h2>
+                </div>
+                <div class="form-group">
+                    <label for="setting_about_text"><i class="fas fa-align-left"></i> Tentang Toko</label>
+                    <textarea id="setting_about_text" name="setting_about_text" class="form-control" rows="4" placeholder="Deskripsi singkat tentang toko...">{{ settings.get('about_text', '') }}</textarea>
+                </div>
+
+                <!-- Show any other settings not explicitly listed above -->
+                {% set known_keys = ['store_name', 'tagline', 'whatsapp', 'address', 'open_hours', 'open_hour', 'close_hour', 'gmaps_embed', 'gmaps_link', 'about_text'] %}
+                {% set extra_settings = [] %}
+                {% for key, value in settings.items() %}
+                    {% if key not in known_keys %}
+                        {% if extra_settings.append(key) %}{% endif %}
+                    {% endif %}
+                {% endfor %}
+                {% if extra_settings %}
+                <div style="border-top:1px solid #eee;padding-top:15px;margin-top:10px;">
+                    <h3 style="font-size:0.95rem;font-weight:600;color:#555;margin-bottom:15px;"><i class="fas fa-sliders-h"></i> Pengaturan Tambahan</h3>
+                    {% for key in extra_settings %}
+                    <div class="form-group">
+                        <label for="setting_{{ key }}">{{ key|replace('_', ' ')|title }}</label>
+                        {% if settings[key] and settings[key]|length > 100 %}
+                        <textarea id="setting_{{ key }}" name="setting_{{ key }}" class="form-control" rows="3">{{ settings[key] }}</textarea>
+                        {% else %}
+                        <input type="text" id="setting_{{ key }}" name="setting_{{ key }}" class="form-control" value="{{ settings[key] or '' }}">
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Save Button -->
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:30px;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Simpan Semua Pengaturan
+                </button>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-sm" style="background:#eee;color:#555;">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
+                </a>
+            </div>
+
+        </form>
+
+    </div><!-- /main-content -->
+
+    <script>
+        // Sidebar toggle
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const toggle = document.getElementById('sidebarToggle');
+        if (toggle) {
+            toggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('show');
+            });
+        }
+        if (overlay) {
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+            });
+        }
+
+        // Auto-dismiss flash messages
+        document.querySelectorAll('.flash-message').forEach(el => {
+            setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 5000);
+        });
+    </script>
+</body>
+</html>

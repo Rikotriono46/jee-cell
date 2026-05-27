@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ settings.store_name }} - {{ settings.tagline }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="#" class="navbar-logo">
+                <i class="fas fa-store"></i> Jee Cell
+            </a>
+            <button class="hamburger" id="navToggle" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="navbar-menu" id="navMenu">
+                <li><a href="#beranda">Beranda</a></li>
+                <li><a href="#layanan">Layanan</a></li>
+                <li><a href="#produk">Produk</a></li>
+                <li><a href="#brilink">BRILink</a></li>
+                <li><a href="#jam-buka">Jam Buka</a></li>
+                <li><a href="#lokasi">Lokasi</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- ========== HERO ========== -->
+    <section class="hero" id="beranda">
+        <div class="hero-content">
+            <span class="hero-badge">
+                <i class="fas fa-shield-halved"></i> Agen BRILink Resmi
+            </span>
+            <h1>{{ settings.store_name }}</h1>
+            <p class="hero-subtitle">{{ settings.tagline }}</p>
+            <p class="hero-address">
+                <i class="fas fa-location-dot"></i> {{ settings.address }}
+            </p>
+            <div class="hero-buttons">
+                <a href="#layanan" class="btn btn-primary">
+                    <i class="fas fa-th-large"></i> Lihat Layanan
+                </a>
+                <a href="https://wa.me/{{ settings.whatsapp }}" class="btn btn-whatsapp" target="_blank">
+                    <i class="fab fa-whatsapp"></i> Hubungi Kami
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <span class="hero-stat-number">{{ categories|length }}+</span>
+                    <span class="hero-stat-label">Kategori Layanan</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-number">15 Jam</span>
+                    <span class="hero-stat-label">Buka Setiap Hari</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-number">100%</span>
+                    <span class="hero-stat-label">Terpercaya</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-wave">
+            <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+                <path d="M0,64 C360,120 720,0 1440,64 L1440,120 L0,120 Z" fill="#ffffff"></path>
+            </svg>
+        </div>
+    </section>
+
+    <!-- ========== ANNOUNCEMENTS MARQUEE ========== -->
+    {% if announcements %}
+    <section class="announcements">
+        <div class="announcements-inner">
+                {% for ann in announcements %}
+                <span class="announcement-item">
+                    <i class="fas {{ ann.icon if ann.icon else 'fa-bullhorn' }}"></i>
+                    <strong>{{ ann.title }}</strong> — {{ ann.content }}
+                </span>
+                {% endfor %}
+                {# duplicate for seamless loop #}
+                {% for ann in announcements %}
+                <span class="announcement-item">
+                    <i class="fas {{ ann.icon if ann.icon else 'fa-bullhorn' }}"></i>
+                    <strong>{{ ann.title }}</strong> — {{ ann.content }}
+                </span>
+                {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ========== SERVICES (CATEGORIES) ========== -->
+    <section class="services" id="layanan">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Layanan Kami</h2>
+                <p class="section-subtitle">Berbagai layanan terbaik untuk kebutuhan Anda</p>
+            </div>
+            <div class="services-grid">
+                {% for cat in categories %}
+                {% if cat.is_active %}
+                <a href="/produk?category={{ cat.id }}" class="service-card">
+                    <div class="service-icon">
+                        <i class="fas {{ cat.icon if cat.icon else 'fa-cube' }}"></i>
+                    </div>
+                    <h3>{{ cat.name }}</h3>
+                    <p>{{ cat.description or '' }}</p>
+                    <span style="font-size:0.82rem;color:var(--gray-600);font-weight:600;">
+                        <i class="fas fa-box"></i> Lihat Produk
+                    </span>
+                </a>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FEATURED PRODUCTS ========== -->
+    {% if featured %}
+    <section class="featured-products" id="produk">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-star"></i> Produk Unggulan</h2>
+                <p class="section-subtitle">Pilihan produk terbaik dan terlaris kami</p>
+            </div>
+            <div class="products-grid">
+                {% for product in featured %}
+                <a href="/produk/{{ product.id }}" class="product-card">
+                    {% if product.image_url %}
+                    <div class="product-image">
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
+                    </div>
+                    {% else %}
+                    <div class="product-image">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    {% endif %}
+                    <div class="product-body">
+                        <span class="product-category">
+                            <i class="fas {{ product.category_icon if product.category_icon else 'fa-tag' }}"></i>
+                            {{ product.category_name }}
+                        </span>
+                        <h3 class="product-name">{{ product.name }}</h3>
+                        <p class="product-price">{{ product.price_label }}</p>
+                        {% if product.description %}
+                        <p class="product-desc">{{ product.description[:100] }}{% if product.description|length > 100 %}...{% endif %}</p>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ========== PRODUCTS BY CATEGORY ========== -->
+    {% if products_by_cat %}
+    <section class="products-by-category">
+        <div class="container">
+            {% for cat_name, cat_data in products_by_cat.items() %}
+            <div class="category-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas {{ cat_data.icon if cat_data.icon else 'fa-tag' }}"></i>
+                        {{ cat_name }}
+                    </h2>
+                    {% if cat_data.description %}
+                    <p class="section-subtitle">{{ cat_data.description }}</p>
+                    {% endif %}
+                </div>
+                <div class="products-grid">
+                    {% for product in cat_data.products %}
+                    <a href="/produk/{{ product.id }}" class="product-card">
+                        {% if product.image_url %}
+                        <div class="product-image">
+                            <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
+                        </div>
+                        {% else %}
+                        <div class="product-image">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        {% endif %}
+                        <div class="product-body">
+                            <h3 class="product-name">{{ product.name }}</h3>
+                            <p class="product-price">{{ product.price_label }}</p>
+                            {% if product.description %}
+                            <p class="product-desc">{{ product.description[:80] }}{% if product.description|length > 80 %}...{% endif %}</p>
+                            {% endif %}
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ========== BRILink EXPLANATION ========== -->
+    <section class="brilink" id="brilink">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-university"></i> Layanan BRILink</h2>
+                <p class="section-desc">Agen BRILink Resmi — Transaksi perbankan mudah tanpa ke bank</p>
+            </div>
+            <div class="brilink-grid">
+                <div class="brilink-card">
+                    <div class="brilink-icon"><i class="fas fa-exchange-alt"></i></div>
+                    <h3>Transfer</h3>
+                    <p>Kirim uang ke seluruh rekening bank di Indonesia dengan mudah dan cepat</p>
+                </div>
+                <div class="brilink-card">
+                    <div class="brilink-icon"><i class="fas fa-money-bill-wave"></i></div>
+                    <h3>Tarik Tunai</h3>
+                    <p>Tarik uang tunai dari rekening BRI Anda langsung di tempat kami</p>
+                </div>
+                <div class="brilink-card">
+                    <div class="brilink-icon"><i class="fas fa-piggy-bank"></i></div>
+                    <h3>Setor Tunai</h3>
+                    <p>Setor uang tunai ke rekening BRI tanpa harus antre di bank</p>
+                </div>
+                <div class="brilink-card">
+                    <div class="brilink-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <h3>Pembayaran Tagihan</h3>
+                    <p>Bayar tagihan listrik, air, BPJS, internet, dan berbagai tagihan lainnya</p>
+                </div>
+                <div class="brilink-card">
+                    <div class="brilink-icon"><i class="fas fa-wallet"></i></div>
+                    <h3>E-Wallet Top Up</h3>
+                    <p>Isi saldo GoPay, OVO, Dana, ShopeePay, dan dompet digital lainnya</p>
+                </div>
+                <div class="brilink-card">
+                    <div class="brilink-icon"><i class="fas fa-qrcode"></i></div>
+                    <h3>QRIS</h3>
+                    <p>Terima dan lakukan pembayaran melalui QRIS dari berbagai aplikasi</p>
+                </div>
+            </div>
+            <div class="brilink-note">
+                <i class="fas fa-shield-halved"></i>
+                Semua transaksi BRILink dijamin aman
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== OPERATING HOURS ========== -->
+    <section class="hours-section" id="jam-buka">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-clock"></i> Jam Buka</h2>
+            </div>
+            <div class="hours-card">
+                <div class="hours-clock">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div>
+                    <p class="hours-time">{{ settings.open_hours }}</p>
+                    <div class="hours-status" id="open-status"
+                         data-open="{{ settings.open_hour or '8' }}"
+                         data-close="{{ settings.close_hour or '22' }}">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Memeriksa...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== LOCATION ========== -->
+    <section class="location-section" id="lokasi">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-map-marker-alt"></i> Lokasi Kami</h2>
+                <p class="section-subtitle">{{ settings.address }}</p>
+            </div>
+            <div class="map-wrapper">
+                {% if settings.gmaps_embed %}
+                <iframe
+                    src="{{ settings.gmaps_embed }}"
+                    width="100%"
+                    height="400"
+                    style="border:0;"
+                    allowfullscreen=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+                {% endif %}
+            </div>
+            {% if settings.gmaps_link %}
+            <div class="map-actions">
+                <a href="{{ settings.gmaps_link }}" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-directions"></i> Buka di Google Maps
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4><i class="fas fa-store"></i> {{ settings.store_name }}</h4>
+                    <p>{{ settings.about_text or settings.tagline }}</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Layanan</h4>
+                    <ul>
+                        {% for cat in categories %}
+                        {% if cat.is_active %}
+                        <li><a href="/produk?category={{ cat.id }}">{{ cat.name }}</a></li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Kontak</h4>
+                    <ul class="contact-list">
+                        <li>
+                            <i class="fab fa-whatsapp"></i>
+                            <a href="https://wa.me/{{ settings.whatsapp }}" target="_blank">
+                                {{ settings.whatsapp }}
+                            </a>
+                        </li>
+                        <li>
+                            <i class="fas fa-location-dot"></i>
+                            {{ settings.address }}
+                        </li>
+                        <li>
+                            <i class="fas fa-clock"></i>
+                            {{ settings.open_hours }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; {{ settings.store_name }} — All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ========== WHATSAPP FLOATING BUTTON ========== -->
+    <div class="whatsapp-float" id="waFloat">
+        <a href="https://wa.me/{{ settings.whatsapp }}" target="_blank">
+            <span class="tooltip">Chat Kami</span>
+            <i class="fab fa-whatsapp"></i>
+        </a>
+    </div>
+
+    <!-- ========== BACK TO TOP ========== -->
+    <button class="back-to-top" id="backToTop" aria-label="Kembali ke atas">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <!-- Store hours data for JS -->
+    <script>
+        window.STORE_OPEN_HOUR = {{ settings.open_hour or 8 }};
+        window.STORE_CLOSE_HOUR = {{ settings.close_hour or 23 }};
+    </script>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

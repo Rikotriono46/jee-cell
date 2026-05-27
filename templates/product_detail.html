@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} - Jee Cell</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; color: #333; background: #f5f7fa; }
+        a { text-decoration: none; color: inherit; }
+
+        /* Navbar */
+        .navbar { background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 100; padding: 15px 0; }
+        .navbar .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar .logo { font-size: 1.5rem; font-weight: 700; color: #003d79; }
+        .navbar .logo span { color: #f7b731; }
+        .navbar nav a { margin-left: 25px; font-weight: 500; color: #555; transition: color 0.3s; }
+        .navbar nav a:hover { color: #003d79; }
+
+        /* Breadcrumb */
+        .breadcrumb { max-width: 1200px; margin: 20px auto 0; padding: 0 20px; font-size: 0.88rem; color: #888; }
+        .breadcrumb a { color: #003d79; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb span { margin: 0 8px; color: #bbb; }
+
+        /* Product Detail */
+        .detail-section { max-width: 1000px; margin: 30px auto 60px; padding: 0 20px; }
+        .product-detail-card { background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.07); overflow: hidden; }
+        .detail-image { width: 100%; height: 400px; background: #f0f4f8; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .detail-image img { width: 100%; height: 100%; object-fit: cover; }
+        .detail-image .icon-placeholder { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: #fff; }
+        .detail-body { padding: 30px 35px 35px; }
+        .detail-body .badges { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .badge-cat { background: #e8f0fe; color: #003d79; padding: 4px 14px; border-radius: 15px; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+        .badge-featured { background: #fff3cd; color: #b8860b; padding: 4px 14px; border-radius: 15px; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+        .detail-body h1 { font-size: 1.8rem; font-weight: 700; color: #222; margin-bottom: 8px; }
+        .detail-body .price { font-size: 1.8rem; font-weight: 700; color: #003d79; margin-bottom: 20px; }
+        .detail-body .description { font-size: 0.95rem; color: #666; line-height: 1.7; margin-bottom: 25px; }
+        .stock-status { font-size: 0.9rem; font-weight: 600; margin-bottom: 25px; display: inline-flex; align-items: center; gap: 6px; }
+        .stock-status.available { color: #1a9d52; }
+        .stock-status.empty { color: #d32f2f; }
+        .btn-wa { display: inline-flex; align-items: center; gap: 10px; background: #25d366; color: #fff; padding: 14px 32px; border-radius: 30px; font-size: 1rem; font-weight: 600; transition: background 0.3s, transform 0.2s; box-shadow: 0 4px 15px rgba(37,211,102,0.3); }
+        .btn-wa:hover { background: #1ebe5d; transform: translateY(-2px); }
+        .btn-wa i { font-size: 1.2rem; }
+        .btn-back { display: inline-flex; align-items: center; gap: 6px; margin-top: 20px; color: #003d79; font-weight: 500; font-size: 0.95rem; }
+        .btn-back:hover { text-decoration: underline; }
+
+        /* Footer */
+        .footer { background: #1a1a2e; color: #ccc; padding: 40px 20px; text-align: center; margin-top: 0; }
+        .footer .container { max-width: 1200px; margin: 0 auto; }
+        .footer p { font-size: 0.9rem; }
+
+        /* WA Float */
+        .wa-float { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: #25d366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(37,211,102,0.4); z-index: 999; transition: transform 0.3s; }
+        .wa-float:hover { transform: scale(1.1); }
+        .wa-float i { color: #fff; font-size: 1.7rem; }
+
+        @media (max-width: 768px) {
+            .detail-image { height: 280px; }
+            .detail-body { padding: 20px; }
+            .detail-body h1 { font-size: 1.4rem; }
+            .detail-body .price { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="container">
+            <a href="/" class="logo">Jee<span>Cell</span></a>
+            <nav>
+                <a href="/">Beranda</a>
+                <a href="/produk">Produk</a>
+                <a href="/tentang">Tentang</a>
+                <a href="/kontak">Kontak</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="/">Beranda</a>
+        <span>›</span>
+        <a href="/produk">Produk</a>
+        <span>›</span>
+        <a href="/produk?category={{ product.category_id }}">{{ product.category_name }}</a>
+        <span>›</span>
+        {{ product.name }}
+    </div>
+
+    <!-- Product Detail -->
+    <section class="detail-section">
+        <div class="product-detail-card">
+            <div class="detail-image">
+                {% if product.image_url %}
+                <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                {% else %}
+                <div class="icon-placeholder" style="background: {{ product.category_color or '#003d79' }};">
+                    <i class="{{ product.category_icon or 'fas fa-mobile-alt' }}"></i>
+                </div>
+                {% endif %}
+            </div>
+            <div class="detail-body">
+                <div class="badges">
+                    {% if product.category_name %}
+                    <span class="badge-cat"><i class="fas fa-tag"></i> {{ product.category_name }}</span>
+                    {% endif %}
+                    {% if product.is_featured %}
+                    <span class="badge-featured"><i class="fas fa-star"></i> Unggulan</span>
+                    {% endif %}
+                </div>
+                <h1>{{ product.name }}</h1>
+                <div class="price">{{ product.price_label }}</div>
+                <div class="description">{{ product.description or '' }}</div>
+                {% if product.stock and product.stock > 0 %}
+                <div class="stock-status available"><i class="fas fa-check-circle"></i> Tersedia</div>
+                {% else %}
+                <div class="stock-status empty"><i class="fas fa-times-circle"></i> Stok Habis</div>
+                {% endif %}
+                <br>
+                {% if settings.whatsapp %}
+                <a href="https://wa.me/{{ settings.whatsapp }}?text=Halo%2C%20saya%20mau%20pesan%20{{ product.name | urlencode }}" class="btn-wa" target="_blank" rel="noopener">
+                    <i class="fab fa-whatsapp"></i> Pesan via WhatsApp
+                </a>
+                {% endif %}
+                <br>
+                <a href="/produk" class="btn-back"><i class="fas fa-arrow-left"></i> Kembali ke Produk</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; {{ now().year if now is defined else 2025 }} {{ settings.store_name or 'Jee Cell' }}. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- WhatsApp Float -->
+    {% if settings.whatsapp %}
+    <a href="https://wa.me/{{ settings.whatsapp }}" class="wa-float" target="_blank" rel="noopener">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+    {% endif %}
+</body>
+</html>

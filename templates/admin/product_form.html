@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if action == 'edit' %}Edit Produk{% else %}Tambah Produk{% endif %} - Jee Cell Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body>
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo"><i class="fas fa-store"></i> Jee <span>Cell</span></div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="{{ url_for('admin_products') }}" class="active"><i class="fas fa-box"></i> Produk</a></li>
+            <li><a href="{{ url_for('admin_settings') }}"><i class="fas fa-cog"></i> Pengaturan</a></li>
+            <div class="sidebar-section-title">Lainnya</div>
+            <li><a href="/" target="_blank"><i class="fas fa-external-link-alt"></i> Lihat Website</a></li>
+            <li><a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </aside>
+
+    <!-- Top Bar -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+            {% if action == 'edit' %}Edit Produk{% else %}Tambah Produk{% endif %}
+        </div>
+        <div class="topbar-right">
+            <span class="admin-name"><i class="fas fa-user-circle"></i> {{ session.admin_user }}</span>
+            <a href="{{ url_for('admin_logout') }}" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+                <span>{{ message }}</span>
+                <button class="flash-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <h1 class="page-title">
+            <i class="fas fa-{% if action == 'edit' %}edit{% else %}plus-circle{% endif %}"></i>
+            {% if action == 'edit' %}Edit Produk: {{ product.name }}{% else %}Tambah Produk Baru{% endif %}
+        </h1>
+
+        <div class="card">
+            <form method="POST" action="">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 25px;">
+                    <!-- Left Column -->
+                    <div>
+                        <div class="form-group">
+                            <label for="name"><i class="fas fa-tag"></i> Nama Produk *</label>
+                            <input type="text" id="name" name="name" class="form-control" placeholder="Nama produk" required
+                                   value="{{ product.name if product else '' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="category_id"><i class="fas fa-folder"></i> Kategori *</label>
+                            <select id="category_id" name="category_id" class="form-control" required>
+                                <option value="">-- Pilih Kategori --</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}"
+                                    {% if product and product.category_id == cat.id %}selected{% endif %}>
+                                    {{ cat.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description"><i class="fas fa-align-left"></i> Deskripsi</label>
+                            <textarea id="description" name="description" class="form-control" rows="4" placeholder="Deskripsi produk...">{{ product.description if product else '' }}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="image_url"><i class="fas fa-image"></i> URL Gambar</label>
+                            <input type="text" id="image_url" name="image_url" class="form-control" placeholder="https://example.com/image.jpg"
+                                   value="{{ product.image_url if product else '' }}">
+                            {% if product and product.image_url %}
+                            <div style="margin-top:8px;">
+                                <img src="{{ product.image_url }}" alt="Preview" style="max-height:80px;border-radius:6px;">
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div>
+                        <div class="form-group">
+                            <label for="price"><i class="fas fa-money-bill"></i> Harga (Rp)</label>
+                            <input type="number" id="price" name="price" class="form-control" placeholder="0" step="any" min="0"
+                                   value="{{ product.price if product else '0' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="price_label"><i class="fas fa-tag"></i> Label Harga</label>
+                            <input type="text" id="price_label" name="price_label" class="form-control" placeholder="Rp 10.000"
+                                   value="{{ product.price_label if product else '' }}">
+                            <small style="color:#888;font-size:0.8rem;">Teks yang ditampilkan di website (misal: "Rp 10.000", "Gratis", "Rp 500/lembar")</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="stock"><i class="fas fa-cubes"></i> Stok</label>
+                            <input type="number" id="stock" name="stock" class="form-control" placeholder="0" min="0"
+                                   value="{{ product.stock if product else '0' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" id="is_active" name="is_active"
+                                       {% if not product or product.is_active %}checked{% endif %}>
+                                <label for="is_active" style="margin-bottom:0;"><i class="fas fa-toggle-on"></i> Aktif (tampilkan di website)</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" id="is_featured" name="is_featured"
+                                       {% if product and product.is_featured %}checked{% endif %}>
+                                <label for="is_featured" style="margin-bottom:0;"><i class="fas fa-star"></i> Featured (tampilkan di halaman utama)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="border-top:1px solid #eee;padding-top:20px;margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {% if action == 'edit' %}Simpan Perubahan{% else %}Tambah Produk{% endif %}
+                    </button>
+                    <a href="{{ url_for('admin_products') }}" class="btn btn-sm" style="background:#eee;color:#555;">
+                        <i class="fas fa-arrow-left"></i> Kembali ke Daftar Produk
+                    </a>
+                </div>
+            </form>
+        </div>
+
+    </div><!-- /main-content -->
+
+    <script>
+        // Sidebar toggle
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const toggle = document.getElementById('sidebarToggle');
+        if (toggle) {
+            toggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('show');
+            });
+        }
+        if (overlay) {
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+            });
+        }
+
+        // Auto-dismiss flash messages
+        document.querySelectorAll('.flash-message').forEach(el => {
+            setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 5000);
+        });
+    </script>
+</body>
+</html>
